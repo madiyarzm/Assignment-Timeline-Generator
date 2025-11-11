@@ -19,7 +19,12 @@ def create_app():
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     db.init_app(app)
-    CORS(app, supports_credentials=True)
+    # Настройка CORS для работы с фронтендом
+    CORS(app, 
+         supports_credentials=True,
+         origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+         allow_headers=["Content-Type", "Authorization"],
+         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
     login_manager = LoginManager()
     login_manager.init_app(app)
@@ -30,8 +35,10 @@ def create_app():
 
     # --- Register auth routes ---
     from backend.api.routes.auth import auth_bp
+    from backend.api.routes.assignments import assignments_bp
 
     app.register_blueprint(auth_bp, url_prefix="/auth")
+    app.register_blueprint(assignments_bp)
 
     # --- Health check route ---
     @app.route("/health")
