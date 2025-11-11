@@ -1,0 +1,70 @@
+import os
+import sys
+from flask import Flask, jsonify, send_from_directory
+from flask_login import LoginManager
+from flask_cors import CORS
+
+# --- Ensure backend is importable when running directly ---
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+from backend.database.models import db, User
+
+
+def create_app():
+    app = Flask(__name__)
+    app.config["SECRET_KEY"] = "super-secret-key"
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.db"
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+    db.init_app(app)
+    CORS(app, supports_credentials=True)
+
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
+
+    # --- Register auth routes ---
+    from backend.api.routes.auth import auth_bp
+
+    app.register_blueprint(auth_bp, url_prefix="/auth")
+
+    # --- Health check route ---
+    @app.route("/health")
+    def health():
+        return jsonify({"status": "ok"})
+
+    # --- Ensure DB tables exist ---
+    with app.app_context():
+        db.create_all()
+
+    # --- Serve React frontend ---
+    @app.route("/", defaults={"path": ""})
+    @app.route("/<path:path>")
+    def serve_react(path):
+        build_dir = os.path.join(os.path.dirname(__file__), "..", "frontend", "public")
+        index_path = os.path.join(build_dir, "index.html")
+
+        print("Looking for frontend in:", build_dir)
+
+        # Serve static assets (JS, CSS, etc.)
+        if path != "" and os.path.exists(os.path.join(build_dir, path)):
+            return send_from_directory(build_dir, path)
+
+        # Fallback: serve index.html for React Router
+        if os.path.exists(index_path):
+            return send_from_directory(build_dir, "index.html")
+
+        # If frontend isn't built
+        return jsonify({"error": "Frontend not found"}), 404
+
+    return app
+
+
+if __name__ == "__main__":
+    app = create_app()
+    app.run(debug=True)
