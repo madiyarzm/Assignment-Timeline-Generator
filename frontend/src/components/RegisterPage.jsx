@@ -1,27 +1,35 @@
 import React, { useState } from 'react';
+import api from '../api';
 
 function RegisterPage({ onRegister, onSwitchToLogin }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     
     if (!name || !email || !password) {
       setError('Please fill in all fields');
       return;
     }
 
-    // Simulate successful registration
-    const user = {
-      id: Date.now(),
-      name: name,
-      email: email
-    };
-
-    onRegister(user);
+    setLoading(true);
+    try {
+      const response = await api.register(name, email, password);
+      if (response.user) {
+        onRegister(response.user);
+      } else {
+        setError('Registration failed. Please try again.');
+      }
+    } catch (err) {
+      setError(err.message || 'Registration failed. Email may already be in use.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -61,8 +69,8 @@ function RegisterPage({ onRegister, onSwitchToLogin }) {
               />
             </div>
             {error && <div className="error-message">{error}</div>}
-            <button type="submit" className="btn btn-primary btn-full">
-              Sign Up
+            <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
+              {loading ? 'Signing up...' : 'Sign Up'}
             </button>
           </form>
           <p className="auth-switch">
