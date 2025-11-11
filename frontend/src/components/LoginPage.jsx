@@ -1,26 +1,34 @@
 import React, { useState } from 'react';
+import api from '../api';
 
 function LoginPage({ onLogin, onSwitchToRegister }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     
     if (!email || !password) {
       setError('Please fill in all fields');
       return;
     }
 
-    // Simulate successful login
-    const user = {
-      id: Date.now(),
-      email: email,
-      name: email.split('@')[0]
-    };
-
-    onLogin(user);
+    setLoading(true);
+    try {
+      const response = await api.login(email, password);
+      if (response.user) {
+        onLogin(response.user);
+      } else {
+        setError('Login failed. Please try again.');
+      }
+    } catch (err) {
+      setError(err.message || 'Invalid email or password');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -50,8 +58,8 @@ function LoginPage({ onLogin, onSwitchToRegister }) {
               />
             </div>
             {error && <div className="error-message">{error}</div>}
-            <button type="submit" className="btn btn-primary btn-full">
-              Login
+            <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
+              {loading ? 'Logging in...' : 'Login'}
             </button>
           </form>
           <p className="auth-switch">

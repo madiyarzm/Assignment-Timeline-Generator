@@ -29,8 +29,8 @@ function AssignmentDetail({ assignment, onBack, onUpdate }) {
   };
 
   const calculateProgress = () => {
-    if (!localAssignment.subtasks || localAssignment.subtasks.length === 0) {
-      return 0;
+    if (!localAssignment || !localAssignment.subtasks || localAssignment.subtasks.length === 0) {
+      return localAssignment?.progress || 0;
     }
     const completed = localAssignment.subtasks.filter(t => t.completed).length;
     return Math.round((completed / localAssignment.subtasks.length) * 100);
@@ -38,9 +38,15 @@ function AssignmentDetail({ assignment, onBack, onUpdate }) {
 
   const handleToggleSubtask = (index) => {
     const updated = { ...localAssignment };
-    updated.subtasks[index].completed = !updated.subtasks[index].completed;
-    updated.progress = calculateProgress();
-    setLocalAssignment(updated);
+    if (updated.subtasks && updated.subtasks[index]) {
+      updated.subtasks[index].completed = !updated.subtasks[index].completed;
+      // Recalculate progress
+      const completed = updated.subtasks.filter(t => t.completed).length;
+      updated.progress = updated.subtasks.length > 0 
+        ? Math.round((completed / updated.subtasks.length) * 100)
+        : 0;
+      setLocalAssignment(updated);
+    }
   };
 
   const handleSubtaskTextChange = (index, newText) => {
