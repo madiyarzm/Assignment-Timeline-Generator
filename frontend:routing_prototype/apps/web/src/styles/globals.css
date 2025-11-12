@@ -1,0 +1,14 @@
+html, body { 
+  margin: 0; 
+  padding: 0; 
+  font-family: -apple-system, system-ui, Segoe UI, Roboto, Inter, Helvetica, Arial, sans-serif;
+  background: #FAFAFB;
+}
+a { 
+  text-decoration: none; 
+  color: #106DE6;
+}
+a:hover {
+  color: #0A56B8;
+}
+
