@@ -1,5 +1,7 @@
 docs/.env
 *.env
+pycache/
+__pycache__/
 
 # macOS
 .DS_Store
