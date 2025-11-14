@@ -5,69 +5,6 @@ function AddAssignmentModal({ onClose, onSave }) {
   const [description, setDescription] = useState('');
   const [deadline, setDeadline] = useState('');
   const [subtasks, setSubtasks] = useState([]);
-  const [showSubtasks, setShowSubtasks] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-
-  const generateSampleSubtasks = (title, description) => {
-    if (title.toLowerCase().includes('presentation')) {
-      return [
-        'Research topic and gather key points',
-        'Create presentation outline',
-        'Design slides and visual elements',
-        'Practice presentation delivery',
-        'Prepare for questions and discussion',
-        'Present to audience'
-      ];
-    } else if (title.toLowerCase().includes('report')) {
-      return [
-        'Conduct research and data collection',
-        'Analyze findings and draw conclusions',
-        'Write introduction and methodology',
-        'Draft main content and analysis',
-        'Create charts and visualizations',
-        'Final review and submission'
-      ];
-    } else if (title.toLowerCase().includes('project')) {
-      return [
-        'Define project requirements and scope',
-        'Create project timeline and milestones',
-        'Develop core functionality',
-        'Test and debug implementation',
-        'Document code and create user guide',
-        'Deploy and deliver project'
-      ];
-    }
-    
-    return [
-      'Research and gather information',
-      'Create initial outline or plan',
-      'Draft first version',
-      'Review and revise content',
-      'Final proofreading and editing',
-      'Submit or present final work'
-    ];
-  };
-
-  const handleGenerateBreakdown = () => {
-    if (!title) {
-      alert('Please enter a title first');
-      return;
-    }
-
-    setIsGenerating(true);
-
-    // Simulate AI processing delay
-    setTimeout(() => {
-      const generatedSubtasks = generateSampleSubtasks(title, description);
-      setSubtasks(generatedSubtasks.map((text, index) => ({
-        id: index,
-        text: text,
-        completed: false
-      })));
-      setShowSubtasks(true);
-      setIsGenerating(false);
-    }, 2000);
-  };
 
   const handleSubtaskChange = (index, newText) => {
     const updated = [...subtasks];
@@ -87,13 +24,16 @@ function AddAssignmentModal({ onClose, onSave }) {
       return;
     }
 
+    // Don't send subtasks if description exists - let backend generate via LLM
+    // Only send subtasks if user manually added them AND no description
     const assignment = {
-      id: Date.now().toString(),
       title: title,
       description: description,
       deadline: deadline,
       progress: 0,
-      subtasks: subtasks,
+      // Only include subtasks if user manually added them (not auto-generated)
+      // If description exists, backend will use LLM to generate milestones
+      subtasks: (description && description.trim()) ? [] : subtasks,
       createdAt: new Date().toISOString()
     };
 
@@ -105,7 +45,6 @@ function AddAssignmentModal({ onClose, onSave }) {
     setDescription('');
     setDeadline('');
     setSubtasks([]);
-    setShowSubtasks(false);
   };
 
   return (
@@ -149,23 +88,17 @@ function AddAssignmentModal({ onClose, onSave }) {
           </div>
           
           <div className="ai-section">
-            <button 
-              type="button" 
-              className="btn btn-secondary" 
-              onClick={handleGenerateBreakdown}
-            >
-              <i className="fas fa-magic"></i> Generate Breakdown (AI)
-            </button>
-            {isGenerating && (
-              <div className="ai-loading">
-                <i className="fas fa-spinner fa-spin"></i> Generating breakdown...
-              </div>
-            )}
+            <p style={{fontSize: '0.9em', color: '#666', marginBottom: '10px'}}>
+              💡 <strong>Tip:</strong> Fill in the description field and tasks will be automatically generated via AI when you save!
+            </p>
           </div>
 
-          {showSubtasks && subtasks.length > 0 && (
+          {subtasks.length > 0 && (
             <div className="subtasks-container">
-              <h4>Generated Subtasks</h4>
+              <h4>Manual Subtasks (optional)</h4>
+              <p style={{fontSize: '0.85em', color: '#888', marginBottom: '10px'}}>
+                If you add manual subtasks, they will be used instead of AI generation
+              </p>
               {subtasks.map((subtask, index) => (
                 <div key={index} className="subtask-item">
                   <input 
@@ -183,6 +116,26 @@ function AddAssignmentModal({ onClose, onSave }) {
                   </button>
                 </div>
               ))}
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                onClick={() => setSubtasks([...subtasks, {id: subtasks.length, text: '', completed: false}])}
+                style={{marginTop: '10px'}}
+              >
+                + Add Subtask
+              </button>
+            </div>
+          )}
+          
+          {subtasks.length === 0 && (
+            <div style={{marginTop: '10px'}}>
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                onClick={() => setSubtasks([{id: 0, text: '', completed: false}])}
+              >
+                + Add Manual Subtasks (optional)
+              </button>
             </div>
           )}
 

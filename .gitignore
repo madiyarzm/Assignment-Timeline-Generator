@@ -1,5 +1,7 @@
 docs/.env
 *.env
+# But allow .env.example to be committed (it's a template)
+!.env.example
 
 # macOS
 .DS_Store

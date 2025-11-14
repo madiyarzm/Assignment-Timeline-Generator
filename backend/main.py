@@ -3,9 +3,14 @@ import sys
 from flask import Flask, jsonify, send_from_directory
 from flask_login import LoginManager
 from flask_cors import CORS
+from dotenv import load_dotenv
+
+# --- Load environment variables from .env file ---
+# This loads .env from the project root directory
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 
 # --- Ensure backend is importable when running directly ---
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
