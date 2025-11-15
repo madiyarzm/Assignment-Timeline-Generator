@@ -19,24 +19,26 @@ from backend.database.models import db, User
 
 def create_app():
     app = Flask(__name__)
-    app.config["SECRET_KEY"] = "super-secret-key"
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.db"
+    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "super-secret-key")
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     db.init_app(app)
     # Настройка CORS для работы с фронтендом
-    CORS(app, 
-         supports_credentials=True,
-         origins=["http://localhost:3000", "http://127.0.0.1:3000"],
-         allow_headers=["Content-Type", "Authorization"],
-         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+    CORS(
+        app,
+        supports_credentials=True,
+        origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+        allow_headers=["Content-Type", "Authorization"],
+        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    )
 
     login_manager = LoginManager()
     login_manager.init_app(app)
 
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        return User.query.filter_by(user_id=int(user_id)).first()
 
     # --- Register auth routes ---
     from backend.api.routes.auth import auth_bp
