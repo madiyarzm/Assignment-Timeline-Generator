@@ -6,7 +6,7 @@ A full-stack web application that helps students manage their assignments by aut
 
 ### Core Functionality
 
-- **AI-Powered Task Decomposition**: Automatically breaks down complex assignments into smaller, actionable milestones using OpenAI's GPT models
+- **AI-Powered Task Decomposition**: Automatically breaks down complex assignments into smaller, actionable milestones using Anthropic's Claude API (or OpenAI's GPT models)
 - **Progress Tracking**: Visual progress indicators for each assignment and its subtasks
 - **Deadline Management**: Track assignment deadlines and milestone timelines
 - **User Authentication**: Secure user registration and login with session management
@@ -84,8 +84,8 @@ Assignment-Timeline-Generator/
 
 - **Python 3.9+**
 - **Node.js 14+ and npm**
-- **PostgreSQL database** (Neon account recommended)
-- **OpenAI API key** (for AI milestone generation)
+- **PostgreSQL database** (Neon account recommended) or SQLite for development
+- **Anthropic API key** (recommended) or **OpenAI API key** (for AI milestone generation)
 
 ### 1. Clone the Repository
 
@@ -110,30 +110,42 @@ pip install -r ../requirements.txt
 
 #### Configure Environment Variables
 
-Create a `.env` file in the project root:
+**IMPORTANT**: API keys and sensitive configuration should be stored in a `.env` file, which is **NOT** committed to the repository.
 
-```bash
-cp .env.example .env
-```
+1. **Copy the example environment file:**
+   ```bash
+   cp .env.example .env
+   ```
 
-Edit `.env` with your credentials:
+2. **Edit `.env` with your credentials:**
+   ```env
+   # Database Configuration (Neon PostgreSQL or SQLite for development)
+   DATABASE_URL=postgresql://username:password@host.neon.tech/dbname?sslmode=require
+   # Or for SQLite (development):
+   # SQLALCHEMY_DATABASE_URI=sqlite:///users.db
 
-```env
-# Database Configuration (Neon PostgreSQL)
-DATABASE_URL=postgresql://username:password@host.neon.tech/dbname?sslmode=require
+   # Flask Configuration
+   SECRET_KEY=your-secure-random-secret-key
 
-# Flask Configuration
-SECRET_KEY=your-secure-random-secret-key
+   # AI API Configuration (choose one or both)
+   # Anthropic Claude API (recommended)
+   ANTHROPIC_API_KEY=your_anthropic_api_key_here
+   # Get your API key from: https://console.anthropic.com/
+   
+   # OpenAI Configuration (alternative)
+   OPENAI_API_KEY=your-openai-api-key
 
-# OpenAI Configuration
-OPENAI_API_KEY=your-openai-api-key
-```
+   # Google Tasks API (optional - for calendar integration)
+   # GOOGLE_ACCESS_TOKEN=your_google_access_token_here
+   ```
 
 **Get your Neon connection string:**
 
 1. Go to [console.neon.tech](https://console.neon.tech)
 2. Select your project
 3. Copy the connection string from "Connection Details"
+
+3. **Never commit `.env` to git** - it's already in `.gitignore`
 
 #### Initialize the Database
 
@@ -166,7 +178,6 @@ The backend API will run on `http://localhost:5000`
 #### Start the Frontend Development Server
 
 In a new terminal:
-
 ```bash
 cd frontend
 npm start
@@ -238,7 +249,7 @@ The React app will run on `http://localhost:3000`
 
 ## AI Milestone Generation
 
-The application uses OpenAI's GPT-4-mini model to intelligently break down assignments.
+The application uses Anthropic's Claude API (recommended) or OpenAI's GPT models to intelligently break down assignments into structured milestones.
 
 ## Security Features
 
@@ -352,6 +363,28 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Backend**: Follow PEP 8 Python style guide
 - **Frontend**: Use ESLint with React recommended rules
 - **Commits**: Use clear, descriptive commit messages
+
+## For Contributors
+
+When setting up the project for the first time:
+
+1. Clone the repository
+2. Install dependencies (see above)
+3. **Create your own `.env` file** from `.env.example`:
+   ```bash
+   cp .env.example .env
+   ```
+4. Add your Anthropic API key (or OpenAI API key) to `.env`
+5. Start developing!
+
+**Note**: Each contributor needs their own API key. The `.env` file is personal and should never be shared or committed.
+
+## Security Notes
+
+- ✅ `.env` files are automatically ignored by git (see `.gitignore`)
+- ✅ `.env.example` is committed as a template (contains no real keys)
+- ✅ Never commit real API keys or secrets
+- ✅ Each developer uses their own `.env` file locally
 
 ---
 
