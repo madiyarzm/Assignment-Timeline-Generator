@@ -14,9 +14,10 @@ All routes should:
 - Return structured JSON responses containing assignment and milestone data
 """
 
-from flask import Blueprint, request, jsonify
-from flask_login import login_required, current_user
-from backend.database.models import db, Assignment, Milestone
+from flask import Blueprint, jsonify, request
+from flask_login import current_user, login_required
+
+from backend.database.models import Assignment, Milestone, db
 from backend.services.llm_splitter import split_assignment
 
 assignments_bp = Blueprint("assignments", __name__)
@@ -117,13 +118,19 @@ def create_assignment():
 
     # Generate milestones
     subtasks_data = data.get("subtasks", [])
-    
+
     print(f"[API] Creating assignment: {title}", flush=True)
-    print(f"[API]   Description: {'YES' if description else 'NO'} ({len(description) if description else 0} chars)", flush=True)
+    print(
+        f"[API]   Description: {'YES' if description else 'NO'} ({len(description) if description else 0} chars)",
+        flush=True,
+    )
     print(f"[API]   Subtasks provided: {len(subtasks_data)}", flush=True)
     if subtasks_data:
         # Use provided subtasks
-        print(f"[API] Using {len(subtasks_data)} provided subtasks (LLM will NOT be called)", flush=True)
+        print(
+            f"[API] Using {len(subtasks_data)} provided subtasks (LLM will NOT be called)",
+            flush=True,
+        )
         for idx, subtask in enumerate(subtasks_data):
             milestone = Milestone(
                 assignment_id=assignment.assignment_id,
@@ -134,22 +141,29 @@ def create_assignment():
             db.session.add(milestone)
     elif description and description.strip():
         # Generate via LLM
-        print(f"[API] No subtasks provided, generating via LLM for: {title}", flush=True)
+        print(
+            f"[API] No subtasks provided, generating via LLM for: {title}", flush=True
+        )
         try:
             llm_milestones = split_assignment(description, deadline)
-            print(f"[API] Successfully generated {len(llm_milestones)} milestones via LLM", flush=True)
-            
+            print(
+                f"[API] Successfully generated {len(llm_milestones)} milestones via LLM",
+                flush=True,
+            )
+
             # split_assignment returns a list of milestone dicts with structured data
             for idx, milestone_data in enumerate(llm_milestones):
                 # Use title as the main text, with description as additional context
                 title = milestone_data.get("title", f"Milestone {idx + 1}")
                 description_text = milestone_data.get("description", "")
-                
+
                 # Combine title and description for the milestone text
                 milestone_text = f"{title}"
                 if description_text:
-                    milestone_text += f": {description_text[:200]}"  # Truncate long descriptions
-                
+                    milestone_text += (
+                        f": {description_text[:200]}"  # Truncate long descriptions
+                    )
+
                 milestone = Milestone(
                     assignment_id=assignment.assignment_id,
                     text=milestone_text,
@@ -162,6 +176,7 @@ def create_assignment():
             print(f"[API] ❌ LLM FAILED: {e}", flush=True)
             print(f"[API] ⚠️  Using default milestones instead", flush=True)
             import traceback
+
             traceback.print_exc()
             default_milestones = [
                 "Research and gather information",

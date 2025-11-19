@@ -5,12 +5,13 @@ Uses Anthropic's Claude API to break down assignment descriptions into
 structured, actionable milestones.
 """
 
-import os
 import json
+import os
 import re
 import sys
 from datetime import datetime, timedelta
 from typing import Optional
+
 from anthropic import Anthropic
 
 # Environment variables
@@ -39,25 +40,25 @@ def _parse_date(date_str: str) -> datetime:
 def _extract_json(content: str) -> list[dict]:
     """Extract JSON array from response."""
     content = content.strip()
-    
+
     # Remove markdown code blocks
-    json_match = re.search(r'```(?:json)?\s*(\[.*?\])\s*```', content, re.DOTALL)
+    json_match = re.search(r"```(?:json)?\s*(\[.*?\])\s*```", content, re.DOTALL)
     if json_match:
         content = json_match.group(1)
-    
+
     # Find JSON array by matching brackets
-    start_idx = content.find('[')
+    start_idx = content.find("[")
     if start_idx != -1:
         bracket_count = 0
         for i in range(start_idx, len(content)):
-            if content[i] == '[':
+            if content[i] == "[":
                 bracket_count += 1
-            elif content[i] == ']':
+            elif content[i] == "]":
                 bracket_count -= 1
                 if bracket_count == 0:
-                    content = content[start_idx:i+1]
+                    content = content[start_idx : i + 1]
                     break
-    
+
     return json.loads(content)
 
 
@@ -91,14 +92,16 @@ Requirements:
 Output JSON only, no other text."""
 
 
-def split_assignment(description: str, due_date: str, client: Optional[Anthropic] = None) -> list[dict]:
+def split_assignment(
+    description: str, due_date: str, client: Optional[Anthropic] = None
+) -> list[dict]:
     """Split assignment into milestones using Claude API.
-    
+
     Args:
         description: Assignment description
         due_date: Due date (YYYY-MM-DD)
         client: Optional client for testing
-        
+
     Returns:
         List of milestone dicts with id, title, description, dates, dependencies
     """
@@ -107,67 +110,73 @@ def split_assignment(description: str, due_date: str, client: Optional[Anthropic
         raise ValueError("Description cannot be empty")
     if not due_date or not due_date.strip():
         raise ValueError("Due date cannot be empty")
-    
+
     # Parse and validate date
     try:
         due_dt = _parse_date(due_date)
     except ValueError as e:
         raise ValueError(f"Invalid date format: {e}")
-    
+
     today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     due_dt = due_dt.replace(hour=0, minute=0, second=0, microsecond=0)
-    
+
     if due_dt < today:
         raise ValueError("Due date cannot be in the past")
-    
+
     total_days = (due_dt - today).days
     if total_days < 1:
         raise ValueError("Need at least 1 day")
-    
+
     # Get client
     if client is None:
         client = _get_client()
-    
+
     # Build prompt
     prompt = _build_prompt(description, due_date, total_days)
-    
+
     # Call API
     print(f"[LLM] Calling Claude API (model: {_CLAUDE_MODEL})...", flush=True)
-    
+
     try:
         response = client.messages.create(
             model=_CLAUDE_MODEL,
             max_tokens=4096,
             temperature=0.3,
             system="You are an expert task-analysis researcher. Always output valid JSON only.",
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
-        
+
         # Extract content
         if not response.content:
             raise ValueError("Empty response from Claude API")
-        
+
         content = response.content[0].text.strip()
         print(f"[LLM] Received response ({len(content)} chars)", flush=True)
-        
+
         # Parse JSON
         milestones = _extract_json(content)
         print(f"[LLM] Parsed {len(milestones)} milestones", flush=True)
-        
+
         # Validate structure
         validated = []
         for idx, m in enumerate(milestones, 1):
-            validated.append({
-                "id": m.get("id", idx),
-                "title": m.get("title", f"Milestone {idx}"),
-                "description": m.get("description", ""),
-                "suggested_start_date": m.get("suggested_start_date", ""),
-                "suggested_end_date": m.get("suggested_end_date", ""),
-                "dependencies": m.get("dependencies", []) if isinstance(m.get("dependencies"), list) else []
-            })
-        
+            validated.append(
+                {
+                    "id": m.get("id", idx),
+                    "title": m.get("title", f"Milestone {idx}"),
+                    "description": m.get("description", ""),
+                    "suggested_start_date": m.get("suggested_start_date", ""),
+                    "suggested_end_date": m.get("suggested_end_date", ""),
+                    "dependencies": (
+                        m.get("dependencies", [])
+                        if isinstance(m.get("dependencies"), list)
+                        else []
+                    ),
+                }
+            )
+
         return validated
-        
+
     except json.JSONDecodeError as e:
         print(f"[LLM] JSON parse error: {e}", flush=True)
         raise
@@ -180,7 +189,7 @@ if __name__ == "__main__":
     # Simple test
     sample = "Write a 3000-word research paper on AI in education. Include literature review, case studies, and recommendations."
     due = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
-    
+
     try:
         result = split_assignment(sample, due)
         print(f"\n✅ Generated {len(result)} milestones:\n")
