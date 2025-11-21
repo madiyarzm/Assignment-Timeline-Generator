@@ -68,7 +68,14 @@ def _get_tasks_service(credentials):
         raise RuntimeError(f"Failed to build Google Tasks service: {e}")
 
 
-def create_task(tasklist_id, title, notes=None, due_date=None, credentials=None):
+def create_task(
+    tasklist_id,
+    title,
+    notes=None,
+    due_date=None,
+    parent=None,
+    credentials=None,
+):
     """
     Create a new task in the specified task list.
 
@@ -79,6 +86,7 @@ def create_task(tasklist_id, title, notes=None, due_date=None, credentials=None)
         due_date: Due date in RFC3339 format
                   (e.g., "2024-12-15T00:00:00Z") or ISO format string
                   (optional)
+        parent: Parent task ID to create this as a subtask (optional)
         credentials: OAuth2 credentials object (required)
 
     Returns:
@@ -116,6 +124,9 @@ def create_task(tasklist_id, title, notes=None, due_date=None, credentials=None)
                 task_body["due"] = due_date
         elif isinstance(due_date, datetime):
             task_body["due"] = due_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    if parent:
+        task_body["parent"] = parent
 
     try:
         task = service.tasks().insert(tasklist=tasklist_id, body=task_body).execute()

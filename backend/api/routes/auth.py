@@ -1,7 +1,8 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, jsonify, request
 from flask_bcrypt import Bcrypt
-from flask_login import login_user, logout_user, current_user
-from backend.database.models import db, User
+from flask_login import current_user, login_user, logout_user
+
+from backend.database.models import User, db
 
 auth_bp = Blueprint("auth", __name__)
 bcrypt = Bcrypt()

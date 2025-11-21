@@ -1,9 +1,10 @@
 import os
 import sys
-from flask import Flask, jsonify, send_from_directory
-from flask_login import LoginManager
-from flask_cors import CORS
+
 from dotenv import load_dotenv
+from flask import Flask, jsonify, send_from_directory
+from flask_cors import CORS
+from flask_login import LoginManager
 
 # --- Load environment variables from .env file ---
 # This loads .env from the project root directory
@@ -14,7 +15,7 @@ load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from backend.database.models import db, User
+from backend.database.models import User, db
 
 
 def create_app():
@@ -41,8 +42,8 @@ def create_app():
         return User.query.filter_by(user_id=int(user_id)).first()
 
     # --- Register auth routes ---
-    from backend.api.routes.auth import auth_bp
     from backend.api.routes.assignments import assignments_bp
+    from backend.api.routes.auth import auth_bp
 
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(assignments_bp)

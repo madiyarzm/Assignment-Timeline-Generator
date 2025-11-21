@@ -1,6 +1,5 @@
-from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-from datetime import datetime
+from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
@@ -51,7 +50,10 @@ class Milestone(db.Model):
         nullable=False,
         index=True,
     )
-    text = db.Column(db.String(500), nullable=False)
+    title = db.Column(db.String(500), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    due_date = db.Column(db.String(50), nullable=True)
+    google_task_id = db.Column(db.String(200), nullable=True)
     completed = db.Column(db.Boolean, default=False)
     order = db.Column(db.Integer, default=0)
 
@@ -61,6 +63,34 @@ class Milestone(db.Model):
             "milestones",
             lazy=True,
             order_by="Milestone.order",
+            cascade="all, delete-orphan",
+        ),
+    )
+
+
+class Subtask(db.Model):
+    __tablename__ = "subtask"
+
+    subtask_id = db.Column(db.Integer, primary_key=True)
+    milestone_id = db.Column(
+        db.Integer,
+        db.ForeignKey("milestone.milestone_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    title = db.Column(db.String(500), nullable=False)
+    notes = db.Column(db.Text, nullable=True)
+    due_date = db.Column(db.String(50), nullable=True)
+    google_task_id = db.Column(db.String(200), nullable=True)
+    completed = db.Column(db.Boolean, default=False)
+    order = db.Column(db.Integer, default=0)
+
+    milestone = db.relationship(
+        "Milestone",
+        backref=db.backref(
+            "subtasks",
+            lazy=True,
+            order_by="Subtask.order",
             cascade="all, delete-orphan",
         ),
     )

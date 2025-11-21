@@ -51,9 +51,12 @@ Assignment-Timeline-Generator/
 │   ├── database/
 │   │   └── models.py           # SQLAlchemy models (User, Assignment, Milestone)
 │   ├── services/
-│   │   └── llm_splitter.py     # AI milestone generation service
+│   │   ├── llm_splitter.py     # AI milestone generation service
+│   │   └── google_tasks.py     # Google Tasks API integration
 │   ├── tests/
-│   │   └── test_llm_scripts.py # Unit tests
+│   │   ├── integration/         # Integration tests (require API keys)
+│   │   │   └── test_google_tasks.py
+│   │   └── unit/               # Unit tests
 │   └── venv/                   # Python virtual environment
 │
 ├── frontend/
@@ -73,9 +76,10 @@ Assignment-Timeline-Generator/
 │   └── package.json
 │
 ├── docs/
-│   └── progress.md             # Development progress tracking
+│   ├── progress.md             # Development progress tracking
+│   └── google_tasks_service.md # Google Tasks API documentation
 ├── requirements.txt            # Python dependencies
-|__.env.example                # Environment variables template
+└── .env.example                # Environment variables template
 ```
 
 ## Getting Started
@@ -221,7 +225,23 @@ The React app will run on `http://localhost:3000`
 ```python
 - milestone_id (Primary Key)
 - assignment_id (Foreign Key → Assignment)
-- text
+- title
+- description (Optional)
+- due_date (Optional)
+- google_task_id (Optional - for Google Tasks integration)
+- completed (Boolean)
+- order (Integer for sorting)
+```
+
+### Subtask Model
+
+```python
+- subtask_id (Primary Key)
+- milestone_id (Foreign Key → Milestone)
+- title
+- notes (Optional)
+- due_date (Optional)
+- google_task_id (Optional - for Google Tasks integration)
 - completed (Boolean)
 - order (Integer for sorting)
 ```
@@ -267,8 +287,33 @@ Run backend tests:
 ```bash
 cd backend
 source venv/bin/activate
-python -m pytest tests/
+
+# Run all tests
+pytest tests/
+
+# Run only integration tests
+pytest tests/integration/
+
+# Run only unit tests
+pytest tests/unit/
+
+# Run specific test file
+pytest tests/integration/test_google_tasks.py
 ```
+
+**Note:** Integration tests require API keys set in environment variables (e.g., `GOOGLE_ACCESS_TOKEN`). Tests will skip if keys are not available.
+
+## Code Formatting
+
+Format code using isort and black:
+
+```bash
+# From project root
+isort .
+black .
+```
+
+**Order matters:** Always run `isort` first, then `black`.
 
 ## Development Workflow
 
