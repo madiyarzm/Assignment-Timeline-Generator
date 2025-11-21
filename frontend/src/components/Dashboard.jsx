@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import AddAssignmentModal from './AddAssignmentModal';
 
-function Dashboard({ user, assignments, onLogout, onAddAssignment, onShowAssignment }) {
+function Dashboard({ user, assignments, onLogout, onAddAssignment, onShowAssignment, onArchiveAssignment, onDeleteAssignment, onNavigateToArchive }) {
   const [showModal, setShowModal] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
@@ -42,9 +42,14 @@ function Dashboard({ user, assignments, onLogout, onAddAssignment, onShowAssignm
       <main className="dashboard-main">
         <div className="dashboard-header-section">
           <h2 className="dashboard-title">My Assignments</h2>
-          <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-            <i className="fas fa-plus"></i> Add Assignment
-          </button>
+          <div className="dashboard-actions">
+            <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+              <i className="fas fa-plus"></i> Add Assignment
+            </button>
+            <button className="btn btn-secondary" onClick={onNavigateToArchive}>
+              <i className="fas fa-archive"></i> Archive
+            </button>
+          </div>
         </div>
 
         <div className="assignments-container">
@@ -55,25 +60,61 @@ function Dashboard({ user, assignments, onLogout, onAddAssignment, onShowAssignm
               <p>Click + to add your first assignment!</p>
             </div>
           ) : (
-            assignments.map((assignment) => (
-              <div 
-                key={assignment.id} 
-                className="assignment-card"
-                onClick={() => onShowAssignment(assignment)}
-              >
-                <h3 className="assignment-card-title">{assignment.title}</h3>
-                <p className="assignment-card-deadline">Due: {formatDate(assignment.deadline)}</p>
-                <div className="assignment-card-progress">
-                  <div className="progress-bar">
-                    <div 
-                      className="progress-fill" 
-                      style={{ width: `${assignment.progress || 0}%` }}
-                    ></div>
+            assignments.map((assignment) => {
+              const isCompleted = assignment.progress === 100 || 
+                (assignment.subtasks && assignment.subtasks.length > 0 && 
+                 assignment.subtasks.every(subtask => subtask.completed));
+              
+              return (
+                <div 
+                  key={assignment.id} 
+                  className={`assignment-card ${isCompleted ? 'completed' : ''}`}
+                >
+                  <div 
+                    className="assignment-card-content"
+                    onClick={() => onShowAssignment(assignment)}
+                  >
+                    <h3 className="assignment-card-title">{assignment.title}</h3>
+                    <p className="assignment-card-deadline">Due: {formatDate(assignment.deadline)}</p>
+                    <div className="assignment-card-progress">
+                      <div className="progress-bar">
+                        <div 
+                          className="progress-fill" 
+                          style={{ width: `${assignment.progress || 0}%` }}
+                        ></div>
+                      </div>
+                      <div className="progress-text">{assignment.progress || 0}% complete</div>
+                    </div>
                   </div>
-                  <div className="progress-text">{assignment.progress || 0}% complete</div>
+                  <div className="assignment-card-actions">
+                    <button
+                      className="btn btn-small btn-secondary archive-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (window.confirm('Archive this assignment? You can recover it later from the Archive page.')) {
+                          onArchiveAssignment(assignment.id);
+                        }
+                      }}
+                      title="Archive assignment"
+                    >
+                      <i className="fas fa-archive"></i> Archive
+                    </button>
+                    <button
+                      className="btn btn-small btn-danger delete-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (window.confirm('Permanently delete this assignment? This cannot be undone.')) {
+                          onDeleteAssignment(assignment.id);
+                        }
+                      }}
+                      title="Permanently delete assignment"
+                    >
+                      <i className="fas fa-trash"></i> Delete
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </main>

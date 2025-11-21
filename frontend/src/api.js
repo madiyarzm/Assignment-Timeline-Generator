@@ -89,6 +89,41 @@ class ApiClient {
       method: 'DELETE',
     });
   }
+
+  async getArchivedAssignments() {
+    try {
+      return await this.request('/assignments/archived');
+    } catch (error) {
+      // Placeholder: if backend doesn't support this yet, return empty array
+      console.warn('Archived assignments endpoint not available:', error);
+      return [];
+    }
+  }
+
+  async archiveAssignment(id) {
+    try {
+      return await this.request(`/assignments/${id}/archive`, {
+        method: 'PATCH',
+        body: JSON.stringify({ archived: true }),
+      });
+    } catch (error) {
+      // Placeholder: fallback to delete if archive endpoint doesn't exist
+      console.warn('Archive endpoint not available, using delete:', error);
+      return await this.deleteAssignment(id);
+    }
+  }
+
+  async unarchiveAssignment(id) {
+    try {
+      return await this.request(`/assignments/${id}/archive`, {
+        method: 'PATCH',
+        body: JSON.stringify({ archived: false }),
+      });
+    } catch (error) {
+      console.warn('Unarchive endpoint not available:', error);
+      throw error;
+    }
+  }
 }
 
 export default new ApiClient();

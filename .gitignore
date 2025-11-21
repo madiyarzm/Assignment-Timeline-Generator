@@ -5,3 +5,12 @@ docs/.env
 
 # macOS
 .DS_Store
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Node.js
+node_modules/
+package-lock.json

@@ -24,8 +24,8 @@ assignments_bp = Blueprint("assignments", __name__)
 @assignments_bp.route("/assignments", methods=["GET"])
 @login_required
 def get_assignments():
-    """Get all assignments for the current user."""
-    assignments = Assignment.query.filter_by(user_id=current_user.id).all()
+    """Get all non-archived assignments for the current user."""
+    assignments = Assignment.query.filter_by(user_id=current_user.id, archived=False).all()
     
     result = []
     for assignment in assignments:
@@ -37,6 +37,7 @@ def get_assignments():
             "deadline": assignment.deadline,
             "progress": assignment.progress,
             "createdAt": assignment.created_at,
+            "archived": assignment.archived,
             "subtasks": [{
                 "id": m.id,
                 "text": m.text,
@@ -65,6 +66,7 @@ def get_assignment(assignment_id):
         "deadline": assignment.deadline,
         "progress": assignment.progress,
         "createdAt": assignment.created_at,
+        "archived": assignment.archived,
         "subtasks": [{
             "id": m.id,
             "text": m.text,
@@ -178,6 +180,7 @@ def create_assignment():
         "deadline": assignment.deadline,
         "progress": assignment.progress,
         "createdAt": assignment.created_at,
+        "archived": assignment.archived,
         "subtasks": [{
             "id": m.id,
             "text": m.text,
@@ -233,6 +236,7 @@ def update_assignment(assignment_id):
         "deadline": assignment.deadline,
         "progress": assignment.progress,
         "createdAt": assignment.created_at,
+        "archived": assignment.archived,
         "subtasks": [{
             "id": m.id,
             "text": m.text,
@@ -244,17 +248,59 @@ def update_assignment(assignment_id):
 @assignments_bp.route("/assignments/<int:assignment_id>", methods=["DELETE"])
 @login_required
 def delete_assignment(assignment_id):
-    """Delete an assignment and its milestones."""
+    """Archive an assignment (soft delete)."""
     assignment = Assignment.query.filter_by(id=assignment_id, user_id=current_user.id).first()
     
     if not assignment:
         return jsonify({"error": "Assignment not found"}), 404
     
-    # Delete milestones first (cascade should handle this, but being explicit)
-    Milestone.query.filter_by(assignment_id=assignment.id).delete()
-    
-    # Delete assignment
-    db.session.delete(assignment)
+    # Archive the assignment instead of deleting
+    assignment.archived = True
     db.session.commit()
     
-    return jsonify({"message": "Assignment deleted successfully"}), 200
+    return jsonify({"message": "Assignment archived successfully"}), 200
+
+
+@assignments_bp.route("/assignments/archived", methods=["GET"])
+@login_required
+def get_archived_assignments():
+    """Get all archived assignments for the current user."""
+    assignments = Assignment.query.filter_by(user_id=current_user.id, archived=True).all()
+    
+    result = []
+    for assignment in assignments:
+        milestones = Milestone.query.filter_by(assignment_id=assignment.id).order_by(Milestone.order).all()
+        result.append({
+            "id": assignment.id,
+            "title": assignment.title,
+            "description": assignment.description,
+            "deadline": assignment.deadline,
+            "progress": assignment.progress,
+            "createdAt": assignment.created_at,
+            "archived": assignment.archived,
+            "subtasks": [{
+                "id": m.id,
+                "text": m.text,
+                "completed": m.completed
+            } for m in milestones]
+        })
+    
+    return jsonify(result)
+
+
+@assignments_bp.route("/assignments/<int:assignment_id>/archive", methods=["PATCH"])
+@login_required
+def archive_assignment(assignment_id):
+    """Archive or unarchive an assignment."""
+    assignment = Assignment.query.filter_by(id=assignment_id, user_id=current_user.id).first()
+    
+    if not assignment:
+        return jsonify({"error": "Assignment not found"}), 404
+    
+    data = request.get_json()
+    archived = data.get("archived", True)
+    
+    assignment.archived = archived
+    db.session.commit()
+    
+    return jsonify({"message": f"Assignment {'archived' if archived else 'unarchived'} successfully"}), 200
