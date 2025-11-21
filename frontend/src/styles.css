@@ -68,6 +68,17 @@ body {
     color: white;
 }
 
+.btn-danger {
+    background: #dc2626;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #b91c1c;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+}
+
 .btn-small {
     padding: 8px 16px;
     font-size: 12px;
@@ -208,6 +219,12 @@ body {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
 .app-title {
     font-size: 1.5rem;
     font-weight: 700;
@@ -273,6 +290,12 @@ body {
     margin-bottom: 32px;
 }
 
+.dashboard-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
 .dashboard-title {
     font-size: 2rem;
     font-weight: 700;
@@ -311,13 +334,46 @@ body {
     padding: 24px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: all 0.2s ease;
-    cursor: pointer;
     border: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.assignment-card-content {
+    cursor: pointer;
+    flex: 1;
 }
 
 .assignment-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.assignment-card.completed {
+    border-left: 4px solid #10b981;
+    background: linear-gradient(to right, #f0fdf4 0%, white 5%);
+}
+
+.assignment-card.archived {
+    opacity: 0.7;
+    border-left: 4px solid #64748b;
+    background: linear-gradient(to right, #f8fafc 0%, white 5%);
+}
+
+.assignment-card-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.archive-btn,
+.unarchive-btn,
+.delete-btn {
+    flex-shrink: 0;
 }
 
 .assignment-card-title {
@@ -584,16 +640,140 @@ body {
 }
 
 .timeline-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 16px 0;
+    padding: 10px 8px;
     border-bottom: 1px solid #f1f5f9;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s ease;
+    position: relative;
+    margin: 2px 0;
+    border-radius: 6px;
 }
 
 .timeline-item:last-child {
     border-bottom: none;
+}
+
+.timeline-item:hover {
+    background-color: #fafbfc;
+}
+
+.timeline-item-level-0 {
+    padding-left: 0;
+}
+
+.timeline-item-level-1 {
+    padding-left: 32px;
+    margin-left: 16px;
+    border-left: 2px solid #e2e8f0;
+    position: relative;
+}
+
+.timeline-item-level-1::before {
+    content: '';
+    position: absolute;
+    left: -2px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, transparent 0%, #e2e8f0 10%, #e2e8f0 90%, transparent 100%);
+}
+
+.timeline-item-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    position: relative;
+    width: 100%;
+}
+
+.nested-subtasks {
+    margin-top: 6px;
+    margin-left: 0;
+    padding-left: 0;
+}
+
+.subtask-delete-btn {
+    flex-shrink: 0;
+    padding: 4px 8px;
+    min-width: auto;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.subtask-delete-btn.hidden {
+    opacity: 0;
+}
+
+.subtask-delete-btn.visible {
+    opacity: 0.6;
+}
+
+.subtask-delete-btn:hover {
+    opacity: 1;
+    background: #f1f5f9;
+    color: #64748b;
+    border-radius: 4px;
+}
+
+.timeline-actions {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-shrink: 0;
+    min-width: fit-content;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.timeline-item:hover .timeline-actions {
+    opacity: 1;
+}
+
+.add-subtask-btn {
+    padding: 4px 8px;
+    min-width: 28px;
+    height: 28px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    padding: 4px 8px;
+    min-width: 28px;
+    height: 28px;
+    opacity: 0.6;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.btn-icon:hover {
+    opacity: 1;
+    background: #f1f5f9;
+    color: #475569;
+    border-radius: 4px;
+}
+
+.empty-subtasks {
+    text-align: center;
+    padding: 40px 20px;
+    color: #64748b;
+    font-style: italic;
 }
 
 .timeline-item.completed {
@@ -601,32 +781,40 @@ body {
 }
 
 .timeline-checkbox {
-    margin-top: 2px;
+    margin-top: 4px;
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
 }
 
 .timeline-content {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
+    min-width: 0;
 }
 
 .timeline-text {
     font-size: 14px;
     color: #374151;
-    line-height: 1.5;
+    line-height: 1.6;
     border: none;
     background: none;
-    padding: 4px 8px;
+    padding: 6px 8px;
     border-radius: 4px;
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
     resize: none;
-    min-height: 20px;
+    min-height: 24px;
+    width: 100%;
+    font-family: inherit;
 }
 
 .timeline-text:focus {
     outline: none;
     background-color: #f8fafc;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
 }
 
 .timeline-text.completed {
