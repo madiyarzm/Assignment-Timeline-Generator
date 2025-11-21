@@ -1,5 +1,7 @@
 docs/.env
 *.env
+pycache/
+__pycache__/
 # But allow .env.example to be committed (it's a template)
 !.env.example
 

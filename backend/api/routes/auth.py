@@ -1,7 +1,8 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, jsonify, request
 from flask_bcrypt import Bcrypt
-from flask_login import login_user, logout_user, current_user
-from backend.database.models import db, User
+from flask_login import current_user, login_user, logout_user
+
+from backend.database.models import User, db
 
 auth_bp = Blueprint("auth", __name__)
 bcrypt = Bcrypt()
@@ -39,17 +40,22 @@ def signup():
     new_user = User(username=username, email=email, name=name, password=hashed_pw)
     db.session.add(new_user)
     db.session.commit()
-    
+
     login_user(new_user)
-    return jsonify({
-        "message": "User registered successfully!",
-        "user": {
-            "id": new_user.id,
-            "email": new_user.email,
-            "name": new_user.name,
-            "username": new_user.username
-        }
-    }), 201
+    return (
+        jsonify(
+            {
+                "message": "User registered successfully!",
+                "user": {
+                    "id": new_user.user_id,
+                    "email": new_user.email,
+                    "name": new_user.name,
+                    "username": new_user.username,
+                },
+            }
+        ),
+        201,
+    )
 
 
 @auth_bp.route("/login", methods=["POST"])
@@ -64,15 +70,17 @@ def login():
     user = User.query.filter_by(email=email).first()
     if user and bcrypt.check_password_hash(user.password, password):
         login_user(user)
-        return jsonify({
-            "message": "Logged in successfully!",
-            "user": {
-                "id": user.id,
-                "email": user.email,
-                "name": user.name,
-                "username": user.username
+        return jsonify(
+            {
+                "message": "Logged in successfully!",
+                "user": {
+                    "id": user.user_id,
+                    "email": user.email,
+                    "name": user.name,
+                    "username": user.username,
+                },
             }
-        })
+        )
     return jsonify({"error": "Invalid email or password"}), 401
 
 
@@ -85,10 +93,12 @@ def logout():
 @auth_bp.route("/me", methods=["GET"])
 def get_current_user():
     if current_user.is_authenticated:
-        return jsonify({
-            "id": current_user.id,
-            "email": current_user.email,
-            "name": current_user.name,
-            "username": current_user.username
-        })
+        return jsonify(
+            {
+                "id": current_user.user_id,
+                "email": current_user.email,
+                "name": current_user.name,
+                "username": current_user.username,
+            }
+        )
     return jsonify({"error": "Not authenticated"}), 401
